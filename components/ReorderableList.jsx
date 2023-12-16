@@ -2,8 +2,20 @@ import React from 'react';
 import * as ReactAriaLiveAnnouncer from '@react-aria/live-announcer';
 
 const itemData = ['Paddle Boards', 'Bikes', 'Skis'];
+const initialState = {
+	draggedFrom: null,
+	draggedTo: null,
+	isDragging: false,
+	originalOrder: [],
+	updatedOrder: [],
+};
 
 const ReorderableListItem = React.forwardRef(function ReorderableListItem({ name, index, callbackFn, ...props }, ref) {
+	const handleKeyDown = (event) => {
+		if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+			event.preventDefault();
+		}
+	};
 	return (
 		<li
 			data-position={index}
@@ -13,15 +25,41 @@ const ReorderableListItem = React.forwardRef(function ReorderableListItem({ name
 			onDrop={props.onDrop}
 			className={props.isReordering && props.isReordering.draggedTo === Number(index) ? 'dropArea' : ''}>
 			<span className="text">{name}</span>
-			<span className="icon-sort"></span>
+			<button
+				aria-label={`Reorder ${name} from position ${index + 1}`}
+				className="edit"
+				onKeyDown={handleKeyDown}
+				onKeyUp={(event) => {
+					callbackFn(event, index);
+				}}
+				ref={ref}>
+				<span className="icon-sort"></span>
+			</button>
 		</li>
 	);
 });
 
+const announce = (message) => {
+	// ReactAriaLiveAnnouncer.announce(message, 'polite')
+
+	ReactAriaLiveAnnouncer.announce(message, 'assertive');
+};
+
 const ReorderableList = () => {
 	const [items, setItems] = React.useState(itemData);
 
-	const [isReordering, setIsReordering] = React.useState(false);
+	const [isReordering, setIsReordering] = React.useState(initialState);
+
+	const listButtonRefs = React.useRef([]);
+
+	const toggleEditMode = () => {
+		setIsEditing(!isEditing);
+		if (isEditing) {
+			announce('Stopped editing');
+		} else {
+			announce('Edit Mode activated');
+		}
+	};
 
 	const onDragStart = (event) => {
 		const initialPosition = Number(event.currentTarget.dataset.position);
@@ -67,27 +105,27 @@ const ReorderableList = () => {
 	const itemCallbackFn = (event, itemIndex) => {
 		let messageRead = false;
 
-		// if (event.key === 'ArrowDown') {
-		//   if (itemIndex < items.length) {
-		// 	let nextIndex = itemIndex + 1
-		// 	let tmpArray = items.slice()
-		// 	tmpArray.splice(nextIndex, 0, tmpArray.splice(itemIndex, 1).pop())
-		// 	setItems(tmpArray)
-		// 	announce(`${tmpArray[nextIndex]} moved to position ${nextIndex + 1}`)
+		if (event.key === 'ArrowDown') {
+			if (itemIndex < items.length) {
+				let nextIndex = itemIndex + 1;
+				let tmpArray = items.slice();
+				tmpArray.splice(nextIndex, 0, tmpArray.splice(itemIndex, 1).pop());
+				setItems(tmpArray);
+				announce(`${tmpArray[nextIndex]} moved to position ${nextIndex + 1}`);
 
-		// 	listButtonRefs.current[nextIndex].focus()
-		//   }
-		// } else if (event.key === 'ArrowUp') {
-		//   if (itemIndex > 0) {
-		// 	let prevIndex = itemIndex - 1
-		// 	let tmpArray = items.slice()
-		// 	tmpArray.splice(prevIndex, 0, tmpArray.splice(itemIndex, 1).pop())
-		// 	setItems(tmpArray)
-		// 	announce(`${tmpArray[prevIndex]} moved to position ${prevIndex + 1}`)
+				listButtonRefs.current[nextIndex].focus();
+			}
+		} else if (event.key === 'ArrowUp') {
+			if (itemIndex > 0) {
+				let prevIndex = itemIndex - 1;
+				let tmpArray = items.slice();
+				tmpArray.splice(prevIndex, 0, tmpArray.splice(itemIndex, 1).pop());
+				setItems(tmpArray);
+				announce(`${tmpArray[prevIndex]} moved to position ${prevIndex + 1}`);
 
-		// 	listButtonRefs.current[prevIndex].focus()
-		//   }
-		// }
+				listButtonRefs.current[prevIndex].focus();
+			}
+		}
 	};
 
 	React.useEffect(() => {
@@ -99,8 +137,16 @@ const ReorderableList = () => {
 		console.log('List updated!');
 	}, [items]);
 	return (
-		<div items={items} className={`sortable-list-group`}>
-			<ul className="sortable-list">
+		<div className={`sortable-list-group ${isEditing ? `active` : null}`}>
+			<button id="edit-list" onClick={toggleEditMode}>
+				<span className="editingText">Exit edit mode</span>
+				<span className="defaultText">Edit gear list</span>
+			</button>
+			<ul 
+				className="sortable-list"
+				aria-roledescription="Sortable List"
+				role={`${isEditing ? `application` : `group`}`}
+			>
 				{items.map((item, index) => {
 					return (
 						<ReorderableListItem
@@ -112,6 +158,7 @@ const ReorderableList = () => {
 							onDragOver={onDragOver}
 							onDrop={onDrop}
 							isReordering={isReordering}
+							ref={(ref) => listButtonRefs.current.push(ref)}
 						/>
 					);
 				})}

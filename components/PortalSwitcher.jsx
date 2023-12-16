@@ -1,36 +1,59 @@
-import { useState } from 'react';
-import { IconDownArrow } from './Icons';
+import { useState, useRef } from 'react';
+import { FaChevronDown } from 'react-icons/fa';
 
-const PortalSwitcher = ({ children, ...props }) => {
+const PortalSwitcher = ({ ...props }) => {
 	const [isChangePortalShowing, setIsChangePortalShowing] = useState(false);
+	const toggleButton = useRef(null);
+
+	const toggleHandler = (event) => {
+		if (event.code === 'Enter' || event.code === 'Space') {
+			event.preventDefault();
+			setIsChangePortalShowing(!isChangePortalShowing);
+		}
+	};
+	const escapeKeyHandler = (event) => {
+		if (event.code === 'Escape' && isChangePortalShowing) {
+			setIsChangePortalShowing(false);
+
+			if (toggleButton && toggleButton.current) {
+				toggleButton.current.focus();
+			}
+		}
+	};
 	return (
-		<div className={'portal-switcher'} {...props}>
-			<div onMouseEnter={() => setIsChangePortalShowing(true)} onMouseLeave={() => setIsChangePortalShowing(false)}>
+		<div className={'portal-switcher'} {...props} data-test-id="portal-switcher">
+			<div
+				onKeyDown={(event) => escapeKeyHandler(event)}
+				onMouseEnter={() => setIsChangePortalShowing(true)}
+				onMouseLeave={() => setIsChangePortalShowing(false)}>
 				<div className="logo-row">
-					<a href="/account/agents">
-						<img
-							className="logo"
-							src="https://res.cloudinary.com/dsrqk3ngz/image/upload/v1702580644/insurance-agency-meta_ujrtfn.png"
-							width={75}
-						/>
-					</a>
+					<img
+						className="logo"
+						src="https://res.cloudinary.com/dsrqk3ngz/image/upload/v1702580644/insurance-agency-meta_ujrtfn.png"
+						width={75}
+						alt="Insurance Company"
+					/>
 					<div className="text-col">
-						<div onClick={() => (window.location.href = '/account-agents')}>Insurance Agent Portal</div>
+						<a href="/account/agents">Insurance Agent Portal</a>
 
 						<div className="change-portal-text" data-testid="change-portal-trigger">
-							Change Portal
-							<IconDownArrow />
+							<button
+								aria-label="Toggle portal menu"
+								aria-expanded={isChangePortalShowing ? 'true' : 'false'}
+								className="ml-4 focus-visible:ring-2"
+								onKeyDown={(event) => toggleHandler(event)}
+								ref={toggleButton}>
+								Change Portal
+								<FaChevronDown className="icon" />
+							</button>
 						</div>
 					</div>
 				</div>
 				{isChangePortalShowing && (
 					<div className="inner-portals">
-						<div
-							onClick={() => (window.location.href = '/account/brokers/')}
-							className="broker-link"
-							data-testid="broker-portal-link">
+						<a href="/account/brokers/" className="broker-link" data-testid="broker-portal-link">
 							Broker Portal
-						</div>
+						</a>
 					</div>
 				)}
 			</div>
