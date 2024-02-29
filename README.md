@@ -55,13 +55,13 @@
 - Fundamental foundation -> **semantic markup with HTML**
 - ARIA -> standard set of role, state and property attributes that target Assistive Technology.
 - Structure with headings and landmarks - semantic structure
-  - <h1>-<h6>
-  - <main>, <nav>, <footer>, <section> and more
-  - content markup -> <ul> and <ol>
+  - `<h1>-<h6>`
+  - `<main>, <nav>, <footer>, <section>` and more
+  - content markup -> `<ul>` and `<ol>`
   - using the correct elements for interactivity with keyboards and screen readers
 - What makes the A11y spidey sense go off?
-  - Form labels made with <spans> -> easy to change to a <label> element (aria label on input won't make visible text)
-  - Custom controls on forms -> custom dropdown, <select>, <date-picker>, typeahead
+  - Form labels made with `<spans>` -> easy to change to a `<label>` element (aria label on input won't make visible text)
+  - Custom controls on forms -> custom dropdown, `<select>`, `<date-picker>`, typeahead
   - Colors! -> color contrast should be addressed, if you see blending between text/background its a big issue
   - Modals and Layers -> sending/restoring focus, keyboard trapping, using `dialog` role, focusable and labeled buttons and CTAs
   - Mouse only interactions -> `onClick` handler on a `div`
